@@ -38,7 +38,7 @@ import java.io.OutputStream;
  * <p> Most fields of this descriptor are specified in section 9.6.4 of
  * the USB 1.1 specification.
  *
- * @version $Id: Endpoint.java,v 1.9 2000/11/20 17:07:18 dbrownell Exp $
+ * @version $Id: Endpoint.java,v 1.10 2002/04/19 21:56:11 dbrownell Exp $
  */
 final public class Endpoint extends Descriptor
 {
@@ -104,13 +104,48 @@ final public class Endpoint extends Descriptor
 	return null;
     }
 
-    /** Maximum packet size this endpoint can send or receive. */
+    /**
+     * Maximum packet size this endpoint can send or receive.
+     * Note that for "high bandwidth" mode (some USB 2.0 periodic endpoints)
+     * this packet size accomodates the "multiplier".
+     */
     public int getMaxPacketSize ()
-	{ return getU16 (4); }
+    {
+	int	field = getU16 (4);
+	int	size = field & 0x3ff;
+	String	type = getType ();
+	boolean	highspeed = iface.getDevice ().getSpeed () == "high";
+
+	// "high bandwidth" mode may use multiple packets per microframe
+	if (highspeed && (type == "iso" || type == "interrupt"))
+		size *= 1 + (field >> 11) & 0x03;
+	return size;
+    }
     
-    /** Returns interrupt polling interval (in milliseconds).  */
+    /**
+     * Returns interrupt polling interval (in <em>micro</em>seconds).
+     * Polling intervals are typically measurable in milliseconds,
+     * except that high speed periodic transactions may be polled
+     * in intervals smaller than a frame.
+     *
+     * <p> For high speed bulk or contrul OUT endpoints, this value
+     * exposes the maximum NAK rate of the endpoint.
+     */
     public int getInterval ()
-	{ return getU8 (6); }
+    {
+    	int	interval = getU8 (6);
+	String	type = getType ();
+	boolean	highspeed = iface.getDevice ().getSpeed () == "high";
+
+	if (type == "iso" || highspeed) {
+		if ((type == "bulk" || type == "control") && interval == 0)
+			/* never NAKs */ ;
+		else
+			interval = 1 << (interval - 1);
+	}
+	interval *= highspeed ? 125 : 1000;
+	return interval;
+    }
     
 
     // NOTE:  audio endpoint descriptors have 2 extra bytes.

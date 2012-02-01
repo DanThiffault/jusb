@@ -47,13 +47,14 @@ import java.io.Serializable;
  * <p> Control messages are discussed in detail in sections 9.3 and
  * 9.4 of the USB 1.1 specification.
  *
- * <p> At this writing, the Linux implementation has some open
- * issues with its control messaging; they are reduced by effective
- * string caching.
+ * <p> At this writing, the Linux kernel implementation has some open
+ * issues with its control messaging.  They are reduced by effective
+ * string caching (done by this jUSB package) and other techniques
+ * to avoid drivers needing to synchronize their control messaging.
  *
  * @see Device#control
  *
- * @version $Id: ControlMessage.java,v 1.4 2000/11/18 22:58:39 dbrownell Exp $
+ * @version $Id: ControlMessage.java,v 1.7 2005/01/17 07:31:48 westerma Exp $
  */
 final public class ControlMessage
 {
@@ -190,21 +191,21 @@ final public class ControlMessage
 	// could mask request type fields ..
 	{ request = code; }
 
-    
+
     /** Returns the "value" field of the message */
     public short getValue ()
 	{ return value; }
-    
+
     /** Assigns the "value" field of the message */
     public void setValue (short value)
 	{ this.value = value; }
-    
+
     /**
      * Returns the "index" field of the message.
      */
     public short getIndex ()
 	{ return index; }
-    
+
     /**
      * Assigns the "index" field of the message.
      * Endpoints are encoded in the low four bits, with bit seven
@@ -213,7 +214,7 @@ final public class ControlMessage
      */
     public void setIndex (short index)
 	{ this.index = index; }
-    
+
     /**
      * Assigns the buffer used in any data transfer stage of
      * this control operation; used before sending data.
@@ -349,6 +350,7 @@ final public class ControlMessage
 	msg.setValue ((short) ((descriptorType << 8) | (0xff & id)));
 	msg.setIndex ((short) index);
 	msg.setLength (len);
+	//msg.setBuffer (buf); //taken care of in dev.control()
 	dev.control (msg);
 	return msg.getBuffer ();
     }
@@ -408,7 +410,7 @@ final public class ControlMessage
 	    // devices without strings stall here
 	    if (!e.isStalled ())
 		throw e;
-	} 
+	}
 	if (buf == null || buf.length <4)
 	    return null;
 
@@ -552,6 +554,7 @@ final public class ControlMessage
 	msg.setRequest (SET_FEATURE);
 	msg.setValue ((short)(feature & 0xff));
 	msg.setIndex ((short)index);
+	msg.setBuffer (new byte [0]);
 	dev.control (msg);
     }
 }

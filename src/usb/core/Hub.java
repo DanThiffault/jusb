@@ -47,7 +47,7 @@ import java.io.IOException;
  * <p> Note that for consistency with USB itself, port numbers start
  * with one instead of zero.
  *
- * @version $Id: Hub.java,v 1.14 2001/01/28 16:25:56 dbrownell Exp $
+ * @version $Id: Hub.java,v 1.15 2002/04/19 21:57:03 dbrownell Exp $
  */
 final public class Hub extends Descriptor
 {
@@ -97,7 +97,10 @@ final public class Hub extends Descriptor
     /** Port feature selector, indicates if an enabled port is low speed USB. */
     public static final byte	PORT_LOW_SPEED = 9;
 
-    /** Port feature selector, indicates if an enabled port is high speed. */
+    /**
+     * Port feature selector, indicates if an enabled port runs at
+     * low/full speed or at high speed.
+     */
     public static final byte	PORT_HIGH_SPEED = 10;
 
     /** Port feature selector, indicates if an enabled port is test mode. */
@@ -212,6 +215,19 @@ final public class Hub extends Descriptor
 	    case 0x08:	return "per-port";
 	    default:	return "none";
 	}
+    }
+
+    /**
+     * Returns true iff the hub supports status indicators.
+     * These are LEDs that can display as either green or amber.
+     * Normally they are used in an automatic mode where the indicator is
+     * off if no device is attached, and shows a solid green to indicate
+     * normal functioning.  A solid amber indicates some kind of error.
+     * Under software control, the indicator can also blink.
+     */
+    public boolean isIndicator ()
+    {
+	return (getHubCharacteristics () & 0x0080) != 0;
     }
 
     /** Returns the power-on to power-good time, in units of 2ms. */

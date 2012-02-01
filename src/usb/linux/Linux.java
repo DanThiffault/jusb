@@ -1,6 +1,7 @@
 /*
  * Java USB Library
  * Copyright (C) 2000 by David Brownell
+ *    getHost(startup_listener) API added by Wayne Westerman in 2002.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -34,7 +35,7 @@ import usb.core.*;
  * @see usb.remote.HostProxy
  *
  * @author David Brownell
- * @version $Id: Linux.java,v 1.3 2000/12/15 19:02:21 dbrownell Exp $
+ * @version $Id: Linux.java,v 1.5 2005/01/17 07:19:42 westerma Exp $
  */
 public final class Linux extends HostFactory
 {
@@ -54,6 +55,7 @@ public final class Linux extends HostFactory
      * Not part of the API; implements reference implementation SPI.
      */
     public Host createHost () throws IOException { return Linux.getHost (); }
+    public Host createHost (USBListener startup_listener) throws IOException { return Linux.getHost (startup_listener);}
 
 
     /**
@@ -70,6 +72,13 @@ public final class Linux extends HostFactory
      *	doesn't appear to make sense.
      */
     public static Host getHost ()
+    throws IOException, SecurityException
+    {
+	return getHost(null);
+    }
+
+
+    public static Host getHost (USBListener startup_listener)
     throws IOException, SecurityException
     {
 	synchronized (Host.class) {
@@ -89,13 +98,11 @@ public final class Linux extends HostFactory
 		if (!"libgcj".equals (System.getProperty ("java.vm.name")))
 		    System.loadLibrary ("jusb");
 
-		self = new Linux.HostImpl (f);
+		self = new Linux.HostImpl (f,startup_listener);
 	    }
 	}
 	return self;
     }
-
-
 
     /******************************************************************/
 
@@ -115,15 +122,17 @@ public final class Linux extends HostFactory
 	private final transient Hashtable	busses = new Hashtable (3);
 	private final transient Vector		listeners = new Vector (3);
 
-	HostImpl (File directory)
+
+	HostImpl (File directory, USBListener startup_listener)
 	throws IOException, SecurityException
 	// and RuntimeException on any of several errors
 	{
-	    super ();
-
 	    devfsPath = directory.getAbsolutePath ();
+		if(startup_listener != null)
+			addUSBListener(startup_listener);
+
 	    watcher = new Watcher (directory, busses, listeners);
-	    
+
 	    daemon = new Thread (watcher, "USB-Watcher");
 	    daemon.setDaemon (true);
 	    daemon.start ();
@@ -159,6 +168,28 @@ public final class Linux extends HostFactory
 	public usb.core.Device getDevice (String portId)
 	throws IOException
 	{
+	    // hack to work with hotplugging and $DEVICE
+	    // /proc/bus/usb/BBB/DDD names are unstable, evil !!
+	    if (portId.startsWith (devfsPath)) {
+		String	temp;
+		int	busNum, devAddr;
+
+	    	temp = portId.substring (devfsPath.length () + 1);
+		busNum = Integer.parseInt (temp.substring (0, 3), 10);
+		devAddr = Integer.parseInt (temp.substring (4, 7), 10);
+
+		synchronized (busses) {
+		    Enumeration e = busses.keys ();
+
+		    while (e.hasMoreElements ()) {
+			USB bus = (USB) busses.get (e.nextElement ());
+			if (bus.getBusNum () != busNum)
+			    continue;
+			return bus.getDevice (devAddr);
+		    }
+		    return null;
+		}
+	    }
 	    return new PortIdentifier (portId).getDevice (this);
 	}
 
@@ -170,7 +201,7 @@ public final class Linux extends HostFactory
 		throw new IllegalArgumentException ();
 	    listeners.addElement (l);
 	}
-	    
+
 	/** Removes a callback for USB structure changes */
 	public void removeUSBListener (USBListener l)
 	{
@@ -186,7 +217,7 @@ public final class Linux extends HostFactory
 
     /**
      * Scan for bus additions/removals/changes, delegating
-     * most work to the 
+     * most work to the
      */
     private static final class Watcher implements Runnable
     {
@@ -213,10 +244,10 @@ public final class Linux extends HostFactory
 	    // initial population of this bus
 	    while (scan ())
 		continue;
-	    
+
 	    if (busses.isEmpty ())
 		throw new IOException (
-		    "no devices; maybe usbdevfs denies read/write access?"); 
+		    "no devices; maybe usbdevfs denies read/write access?");
 	}
 
 	public void run ()
@@ -309,7 +340,7 @@ public final class Linux extends HostFactory
 			if ("drivers".equals (kids [i]))
 			    continue;
 
-			// excuuuse me??? 
+			// excuuuse me???
 			System.err.println ("Not a usbdevfs bus: "
 				+ kids [i]);
 			e.printStackTrace ();
@@ -328,7 +359,7 @@ public final class Linux extends HostFactory
 			changed = true;
 		    }
 		}
-		
+
 		// we saw all changes before lastTime
 		lastTime = current;
 	    }
@@ -356,7 +387,7 @@ public final class Linux extends HostFactory
 	    busses.remove (busname);
 	    bus.kill ();
 	}
-	
+
 	private void mkBus (String busname, int busnum)
 	throws IOException, SecurityException
 	{
@@ -375,7 +406,7 @@ public final class Linux extends HostFactory
 		    e.printStackTrace ();
 		}
 	    }
-	    
+
 	    while (bus.scanBus ())
 		continue;
 	}

@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <Group
+      location = "group:"
+      name = "">
+      <Group
+         location = "group:bin"
+         name = "bin">
+         <FileRef
+            location = "group:install">
+         </FileRef>
+         <FileRef
+            location = "group:usbd">
+         </FileRef>
+         <FileRef
+            location = "group:viewer">
+         </FileRef>
+      </Group>
+      <Group
+         location = "group:classes"
+         name = "classes">
+         <Group
+            location = "group:usb"
+            name = "usb">
+            <Group
+               location = "group:core"
+               name = "core">
+               <FileRef
+                  location = "group:Bus.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Configuration.class">
+               </FileRef>
+               <FileRef
+                  location = "group:ControlMessage.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Descriptor$GenericDescriptor.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Descriptor.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Device.class">
+               </FileRef>
+               <FileRef
+                  location = "group:DeviceDescriptor.class">
+               </FileRef>
+               <FileRef
+                  location = "group:DeviceSPI.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Endpoint$BulkInputStream.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Endpoint$BulkOutputStream.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Endpoint.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Host.class">
+               </FileRef>
+               <FileRef
+                  location = "group:HostFactory.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Hub.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Interface.class">
+               </FileRef>
+               <FileRef
+                  location = "group:PortIdentifier.class">
+               </FileRef>
+               <FileRef
+                  location = "group:USBException.class">
+               </FileRef>
+               <FileRef
+                  location = "group:USBListener.class">
+               </FileRef>
+               <FileRef
+                  location = "group:USBListenerAdapter.class">
+               </FileRef>
+            </Group>
+            <Group
+               location = "group:devices"
+               name = "devices">
+               <FileRef
+                  location = "group:Kodak$InputHack.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Kodak$OutputHack.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Kodak.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Rio500$Data.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Rio500$FolderEntry.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Rio500$MemoryStatus.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Rio500$SongEntry.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Rio500.class">
+               </FileRef>
+            </Group>
+            <Group
+               location = "group:macosx"
+               name = "macosx">
+               <FileRef
+                  location = "group:DeviceImpl.class">
+               </FileRef>
+               <FileRef
+                  location = "group:MacOSX$HostImpl.class">
+               </FileRef>
+               <FileRef
+                  location = "group:MacOSX.class">
+               </FileRef>
+               <FileRef
+                  location = "group:USB.class">
+               </FileRef>
+               <FileRef
+                  location = "group:USBException.class">
+               </FileRef>
+            </Group>
+            <Group
+               location = "group:remote"
+               name = "remote">
+               <FileRef
+                  location = "group:HostProxy$BusProxy.class">
+               </FileRef>
+               <FileRef
+                  location = "group:HostProxy$BusProxy_Stub.class">
+               </FileRef>
+               <FileRef
+                  location = "group:HostProxy$DeviceProxy.class">
+               </FileRef>
+               <FileRef
+                  location = "group:HostProxy$DeviceSPIProxy.class">
+               </FileRef>
+               <FileRef
+                  location = "group:HostProxy$DeviceSPIProxy_Stub.class">
+               </FileRef>
+               <FileRef
+                  location = "group:HostProxy$MappingPurger.class">
+               </FileRef>
+               <FileRef
+                  location = "group:HostProxy.class">
+               </FileRef>
+               <FileRef
+                  location = "group:HostProxy_Stub.class">
+               </FileRef>
+               <FileRef
+                  location = "group:RemoteBus.class">
+               </FileRef>
+               <FileRef
+                  location = "group:RemoteDeviceSPI.class">
+               </FileRef>
+               <FileRef
+                  location = "group:RemoteHost.class">
+               </FileRef>
+               <FileRef
+                  location = "group:RemoteHostFactory.class">
+               </FileRef>
+               <FileRef
+                  location = "group:RemoteUSBListener.class">
+               </FileRef>
+               <FileRef
+                  location = "group:USBD.class">
+               </FileRef>
+               <FileRef
+                  location = "group:USBListenerProxy.class">
+               </FileRef>
+               <FileRef
+                  location = "group:USBListenerProxy_Stub.class">
+               </FileRef>
+            </Group>
+            <Group
+               location = "group:util"
+               name = "util">
+               <FileRef
+                  location = "group:EZ$FirmwareRecord.class">
+               </FileRef>
+               <FileRef
+                  location = "group:EZ.class">
+               </FileRef>
+               <FileRef
+                  location = "group:LangCode.class">
+               </FileRef>
+               <FileRef
+                  location = "group:ShowTree.class">
+               </FileRef>
+               <FileRef
+                  location = "group:USBSocket.class">
+               </FileRef>
+            </Group>
+            <Group
+               location = "group:view"
+               name = "view">
+               <FileRef
+                  location = "group:Foo$1.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Foo$DisplayPanel.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Foo$USBHost.class">
+               </FileRef>
+               <FileRef
+                  location = "group:Foo.class">
+               </FileRef>
+               <FileRef
+                  location = "group:HubNode.class">
+               </FileRef>
+               <FileRef
+                  location = "group:KodakNode.class">
+               </FileRef>
+               <FileRef
+                  location = "group:RioNode$FolderNode.class">
+               </FileRef>
+               <FileRef
+                  location = "group:RioNode.class">
+               </FileRef>
+               <FileRef
+                  location = "group:USBNode.class">
+               </FileRef>
+            </Group>
+         </Group>
+      </Group>
+      <Group
+         location = "group:doc"
+         name = "doc">
+         <FileRef
+            location = "group:overview.html">
+         </FileRef>
+      </Group>
+      <FileRef
+         location = "group:fingerfans.patch">
+      </FileRef>
+      <FileRef
+         location = "group:jusb.jar">
+      </FileRef>
+      <FileRef
+         location = "group:jusb.xcworkspace">
+      </FileRef>
+      <FileRef
+         location = "group:LICENSE">
+      </FileRef>
+      <FileRef
+         location = "group:Makefile">
+      </FileRef>
+      <Group
+         location = "group:native"
+         name = "native">
+         <FileRef
+            location = "group:linux.c">
+         </FileRef>
+         <FileRef
+            location = "group:linux.cc">
+         </FileRef>
+         <FileRef
+            location = "group:macosx.c">
+         </FileRef>
+         <FileRef
+            location = "group:usb_macosx_DeviceImpl.h">
+         </FileRef>
+         <FileRef
+            location = "group:usb_macosx_MacOSX.h">
+         </FileRef>
+         <FileRef
+            location = "group:usb_macosx_MacOSX_HostImpl.h">
+         </FileRef>
+      </Group>
+      <FileRef
+         location = "group:README">
+      </FileRef>
+      <FileRef
+         location = "group:README.linux">
+      </FileRef>
+      <Group
+         location = "group:src"
+         name = "src">
+         <Group
+            location = "group:usb"
+            name = "usb">
+            <Group
+               location = "group:core"
+               name = "core">
+               <FileRef
+                  location = "group:Bus.java">
+               </FileRef>
+               <FileRef
+                  location = "group:Configuration.java">
+               </FileRef>
+               <FileRef
+                  location = "group:ControlMessage.java">
+               </FileRef>
+               <FileRef
+                  location = "group:Descriptor.java">
+               </FileRef>
+               <FileRef
+                  location = "group:Device.java">
+               </FileRef>
+               <FileRef
+                  location = "group:DeviceDescriptor.java">
+               </FileRef>
+               <FileRef
+                  location = "group:DeviceSPI.java">
+               </FileRef>
+               <FileRef
+                  location = "group:Endpoint.java">
+               </FileRef>
+               <FileRef
+                  location = "group:Host.java">
+               </FileRef>
+               <FileRef
+                  location = "group:HostFactory.java">
+               </FileRef>
+               <FileRef
+                  location = "group:Hub.java">
+               </FileRef>
+               <FileRef
+                  location = "group:Interface.java">
+               </FileRef>
+               <FileRef
+                  location = "group:package.html">
+               </FileRef>
+               <FileRef
+                  location = "group:PortIdentifier.java">
+               </FileRef>
+               <FileRef
+                  location = "group:USBException.java">
+               </FileRef>
+               <FileRef
+                  location = "group:USBListener.java">
+               </FileRef>
+               <FileRef
+                  location = "group:USBListenerAdapter.java">
+               </FileRef>
+            </Group>
+            <Group
+               location = "group:devices"
+               name = "devices">
+               <FileRef
+                  location = "group:Kodak.java">
+               </FileRef>
+               <FileRef
+                  location = "group:package.html">
+               </FileRef>
+               <FileRef
+                  location = "group:Rio500.java">
+               </FileRef>
+            </Group>
+            <Group
+               location = "group:linux"
+               name = "linux">
+               <FileRef
+                  location = "group:DeviceImpl.java">
+               </FileRef>
+               <FileRef
+                  location = "group:HID.java">
+               </FileRef>
+               <FileRef
+                  location = "group:Linux.java">
+               </FileRef>
+               <FileRef
+                  location = "group:package.html">
+               </FileRef>
+               <FileRef
+                  location = "group:USB.java">
+               </FileRef>
+               <FileRef
+                  location = "group:USBException.java">
+               </FileRef>
+            </Group>
+            <Group
+               location = "group:macosx"
+               name = "macosx">
+               <FileRef
+                  location = "group:DeviceImpl.java">
+               </FileRef>
+               <FileRef
+                  location = "group:MacOSX.java">
+               </FileRef>
+               <FileRef
+                  location = "group:package.html">
+               </FileRef>
+               <FileRef
+                  location = "group:USB.java">
+               </FileRef>
+               <FileRef
+                  location = "group:USBException.java">
+               </FileRef>
+            </Group>
+            <Group
+               location = "group:remote"
+               name = "remote">
+               <FileRef
+                  location = "group:HostProxy.java">
+               </FileRef>
+               <FileRef
+                  location = "group:package.html">
+               </FileRef>
+               <FileRef
+                  location = "group:RemoteBus.java">
+               </FileRef>
+               <FileRef
+                  location = "group:RemoteDeviceSPI.java">
+               </FileRef>
+               <FileRef
+                  location = "group:RemoteHost.java">
+               </FileRef>
+               <FileRef
+                  location = "group:RemoteHostFactory.java">
+               </FileRef>
+               <FileRef
+                  location = "group:RemoteUSBListener.java">
+               </FileRef>
+               <FileRef
+                  location = "group:USBD.java">
+               </FileRef>
+               <FileRef
+                  location = "group:USBListenerProxy.java">
+               </FileRef>
+            </Group>
+            <Group
+               location = "group:util"
+               name = "util">
+               <FileRef
+                  location = "group:EZ.java">
+               </FileRef>
+               <FileRef
+                  location = "group:LangCode.java">
+               </FileRef>
+               <FileRef
+                  location = "group:package.html">
+               </FileRef>
+               <FileRef
+                  location = "group:ShowTree.java">
+               </FileRef>
+               <FileRef
+                  location = "group:USBSocket.java">
+               </FileRef>
+            </Group>
+            <Group
+               location = "group:view"
+               name = "view">
+               <FileRef
+                  location = "group:Foo.java">
+               </FileRef>
+               <FileRef
+                  location = "group:HubNode.java">
+               </FileRef>
+               <FileRef
+                  location = "group:KodakNode.java">
+               </FileRef>
+               <FileRef
+                  location = "group:package.html">
+               </FileRef>
+               <FileRef
+                  location = "group:RioNode.java">
+               </FileRef>
+               <FileRef
+                  location = "group:USBNode.java">
+               </FileRef>
+            </Group>
+            <Group
+               location = "group:windows"
+               name = "windows">
+               <FileRef
+                  location = "group:DeviceImpl.java">
+               </FileRef>
+               <FileRef
+                  location = "group:package.html">
+               </FileRef>
+               <FileRef
+                  location = "group:USB.java">
+               </FileRef>
+               <FileRef
+                  location = "group:USBException.java">
+               </FileRef>
+               <FileRef
+                  location = "group:win32errors.txt">
+               </FileRef>
+               <FileRef
+                  location = "group:Windows.java">
+               </FileRef>
+            </Group>
+         </Group>
+      </Group>
+   </Group>
+</Workspace>

@@ -24,16 +24,13 @@ import java.io.IOException;
 
 /**
  * Represents a host with one or more Universal Serial Busses.
+ * A Host is the first object you need to access in order to
+ * use this API.  Get one from a HostFactory.
  *
- * <p> A Host is the first object you need to access in order to
- * use this API.  At this writing, accessing that first object
- * uses OS-specific APIs, or unstandardized policies for using
- * RMI Naming.  That will change over time.
- *
- * @see usb.linux.Linux
+ * @see HostFactory
  *
  * @author David Brownell
- * @version $Id: Host.java,v 1.17 2000/11/18 22:58:40 dbrownell Exp $
+ * @version $Id: Host.java,v 1.18 2001/04/04 18:38:22 dbrownell Exp $
  */
 public interface Host
 {

@@ -1,7 +1,7 @@
 #!/bin/bash
 # Install jUSB as an JVM extension (on Linux)
 #
-# $Id: install,v 1.1 2000/09/11 13:31:51 dbrownell Exp $
+# $Id: install,v 1.2 2001/05/16 00:44:12 dbrownell Exp $
 
 PATH=/bin:/usr/bin:$PATH
 
@@ -31,7 +31,8 @@ DIST_ARCH=`objdump -a libjusb.so|fgrep "file format"|awk -F- '{ print $2; }'`
 #
 if java -version 2>&1 | fgrep 1.1 > /dev/null
 then
-    echo "** How do JDK 1.1 installs?"
+    echo "** Do JDK 1.1 installs by hand ... figure it out!"
+    # how does jdk 1.1 need it done ... 
     exit 1;
 elif java -version 2>&1 | fgrep 1.2 > /dev/null
 then

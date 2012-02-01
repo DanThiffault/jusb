@@ -1,0 +1,43 @@
+<html><head>
+    <!-- $Id: package.html,v 1.2 2005/01/17 07:17:40 westerma Exp $ -->
+    <title></title>
+</head><body>
+
+<p> This package has a Mac OS X implementation of a <em>usb.core.Host</em>
+  object, bootstrapping support, and other classes leveraging the Mac OS X
+  IOKit USB API.  The accompanying jusbMacOSX.jnilib native library passes
+  usb.macosx.DeviceImpl native calls to the Mac OS X's IOKit userspace
+  USB APIs. jUSB seems to wrap around the existing IOKit USB API's very
+  neatly compared to Windows, which has no equivalent userspace USB API
+  and thus requires custom filter drivers and IOCtl calls to be written.
+
+<p> The rest of this package overview is a summary of Mac OS X-specific
+  issues you may need to know about.
+
+<h3>Bulk and Interrupt Messaging Support</h3>
+
+<p> Has now been added to the native library but has not been tested thoroughly so your mileage may vary.
+
+<h3>Do not use the Hub or PortIdentifier classes!</h3>
+
+<p>Devices found during device scanning are registered in a flat list,
+  each as the root device on its own bus. The device scanner (working
+  inside the native library) does not report any hubs encountered to
+  jUSB. FingerWorks found that sending descriptor requests from jUSB to
+  hubs through the IOKit API causes the library to crash. </p>
+
+<p>Nothing is known about hubs or the real USB bus topology, since Mac
+  OS X does not provide a file system topology reflecting the physical USB
+  hub/device hierarchy.  So the usb.core.Hub and usb.core.PortIdentifier
+  classes are useless (and should be avoided!) with this Mac OS X
+  implementation. However, the IOKit API does provide a 32-bit 'locator
+  ID' unique to a device's physical location within the USB hub/device
+  tree, which the PortIdentifier class might be adapted to use in the
+  future.</p>
+
+<p>usb.core.Device, usb.core.Descriptor, usb.core.DeviceDescriptor,
+  usb.core.ControlMessage,
+  usb.core.Endpoint, and usb.core.Interface should work for control
+  messaging at least.</p>
+
+</body></html>

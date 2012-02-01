@@ -1,0 +1,71 @@
+<html>
+    <!-- $Id: package.html,v 1.2 2005/01/17 07:21:42 westerma Exp $ -->
+<head><title></title>
+</head><body>
+
+<p> This package has a partial
+  Windows implementation of a <em>usb.core.Host</em>
+  object, bootstrapping support,
+  and other classes leveraging Windows USB support.
+  At this writing, only control traffic really works.
+
+<p> The accompanying source to <em>jusbFWin.dll</em> native code
+  passes userspace Windows ioctl calls to a custom 'filter' driver
+  (<i>fwupdate.sys</i>) that can sit on top of a full Windows device
+  driver like the composite device driver (<i>usbhub.sys</i>) or the
+  generic <i>fwusbstub.sys</i>. The full driver is responsible for
+  handling plugging, disconnect, and power state charges, while the
+  filter driver just passes along control message URBs. The dll and
+  drivers were built with Visual C++ 6.0, and currently attach only to
+  FingerWorks products (vendor ID 0xe97).  To use with other devices,
+  the appropriate product and vendor IDs need to be changed in the inf
+  file (currently <i>fingerworks.inf</i>). Furthermore, before getting the
+  windows host from HostFactory, HostFactory.setVendorIDmatchFilter(int)
+  and HostFactory.setProductIDmatchFilter(int) must be called so that the
+  scanForDevices(int match_vendor_id, int match_product_id) call can initialize
+  the DLL to search for desired vendor and/or product.
+  Specify -1 on the productID to match all products from the given vendor.
+  (Specifying -1 on the vendorID will scan and expose all the devices that
+  appear, but some devices may not be happy talking to our stub or filter drivers.)
+
+<p> The rest of this package overview is a summary of Windows-specific
+  issues you may need to know about.
+
+<h3>Bulk and Interrupt Messaging Support</h3>
+
+<p> ...does not yet exist, but adding it to the DLL and filter driver
+  should be straightforward. Just need to add appropriate ioctl's with
+  properly-formatted URBs. The existing DLL only supports standard
+  descriptor requests and vendor control requests.
+
+<h3> </h3>
+
+<h3>Do not use the Hub or PortIdentifier classes!</h3>
+
+<p>Devices found during driver scanning are registered in a flat list,
+  each as
+  the root device on its own bus. Nothing is known about hubs or the real
+  USB bus topology, since Windows hides hubs behind its <i>usbhub.sys</i>
+  driver, and unlike Linux's usbdevfs, does not provide a file system
+  topology reflecting the physical USB hub/device hierarchy. So the
+  usb.core.Hub and usb.core.PortIdentifier classes are useless (and
+  should be avoided!) with this current Windows implementation.  However,
+  usb.core.Device, usb.core.Descriptor, usb.core.DeviceDescriptor,
+  usb.core.ControlMessage, usb.core.Endpoint, and usb.core.Interface
+  should work for control messaging at least.</p>
+
+<h3><a name="threads">Threading and Device Detection Issues</a></h3>
+
+<p> The Watcher thread within usb.windows.Windows calls out to the DLL
+  every second
+  or so via <i>scanForDevices</i>() to scan for removal or attachment
+  of devices.  The dll calls back <i>newDeviceAvailable</i>() or
+  <i>existingDeviceRemoved</i>() on the same thread for each device
+  change. If the filter driver <i>fwupdate.sys </i>is not yet installed
+  for a detected FingerWorks device on a particular port (yes, Windows
+  must re-register a device for each port :(, the dll also invokes
+  <i>fingerworks.inf </i>to install the appropriate drivers. This may
+  take awhile, and cause various driver installation wizards to pop up
+  for user approval.
+
+</body></html>

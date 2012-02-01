@@ -45,7 +45,7 @@ import usb.devices.Kodak;
  * unfortunately, all these reads currently count as writes due to the
  * odd permissions model currently used by usbdevfs.
  *
- * @version $Id: ShowTree.java,v 1.20 2001/01/02 21:11:26 dbrownell Exp $
+ * @version $Id: ShowTree.java,v 1.22 2002/04/19 22:02:56 dbrownell Exp $
  */
 final public class ShowTree
 {
@@ -125,6 +125,13 @@ final public class ShowTree
 	    + "' busaddr='"
 	    + dev.getAddress ()
 	    + "'?>");
+
+	String	speed = dev.getSpeed ();
+
+	if (speed != null)
+	    indentLine (indent, "<?speed "
+		+ speed
+		+ "?>");
 
 	//
 	// device descriptor
@@ -342,11 +349,26 @@ final public class ShowTree
 	}
     }
 
+    private static boolean isPtp (Configuration config)
+    throws IOException
+    {
+	int	count = config.getNumInterfaces ();
+
+	for (int i = 0; i < count; i++) {
+	    Interface	info = config.getInterface (i, 0);
+	    if (info.getInterfaceClass () == 6
+		    && info.getInterfaceSubClass () == 1
+		    && info.getInterfaceProtocol () == 1)
+		return true;
+	}
+	return false;
+    }
+
     // let's try some intelligence with some devices
     private static void maybePrintDeviceDetails (
 	int indent,
 	DeviceDescriptor info
-    )
+    ) throws IOException
     {
 	indent += 8;
 
@@ -354,10 +376,58 @@ final public class ShowTree
 
 	if (info.getDeviceClass () == Descriptor.CLASS_HUB)
 	    printHubDetails (indent, info.getDevice ());
+
+	else if (isPtp (info.getDevice ().getConfiguration ())) {
+
+	    // FIXME:  if jPhoto is available it should
+	    // be able to plug itself in ...
+
+	    indentLine (indent, "This is a PTP device ... see:");
+	    indentLine (indent, "http://jphoto.sourceforge.net");
+	}
+
 	else if (info.getVendorId () == 0x040a)
 	    printKodakDetails (indent, info);
+
 	else if (info.getVendorId () == 0x0841)
 	    printDiamondDetails (indent, info);
+    }
+
+    private static void printPortStatus (int indent, Device dev, int port)
+    {
+	StringBuffer	str = new StringBuffer ("port " + port + " status:");
+	byte		buf [];
+
+	try {
+	    buf = ControlMessage.getStatus (dev,
+		    ControlMessage.TYPE_CLASS
+			| ControlMessage.RECIPIENT_OTHER,
+		    0, port, 4);
+	    if (ControlMessage.getBit (Hub.PORT_CONNECTION, buf, 0))
+		str.append (" CONNECT");
+	    if (ControlMessage.getBit (Hub.PORT_ENABLE, buf, 0))
+		str.append (" ENABLE");
+	    if (ControlMessage.getBit (Hub.PORT_SUSPEND, buf, 0))
+		str.append (" SUSPEND");
+	    if (ControlMessage.getBit (Hub.PORT_OVER_CURRENT, buf, 0))
+		str.append (" OVER_CURRENT");
+	    if (ControlMessage.getBit (Hub.PORT_RESET, buf, 0))
+		str.append (" RESET");
+	    if (ControlMessage.getBit (Hub.PORT_POWER, buf, 0))
+		str.append (" POWER");
+	    if (ControlMessage.getBit (Hub.PORT_LOW_SPEED, buf, 0))
+		str.append (" LOW");
+	    if (ControlMessage.getBit (Hub.PORT_HIGH_SPEED, buf, 0))
+		str.append (" HIGH");
+	    if (ControlMessage.getBit (Hub.PORT_TEST, buf, 0))
+		str.append (" TEST");
+	    if (ControlMessage.getBit (Hub.PORT_INDICATOR, buf, 0))
+		str.append (" INDICATOR");
+	} catch (IOException e) {
+	    str.append (" can't get, ");
+	    str.append (e.getMessage ());
+	}
+	indentLine (indent, str.toString ());
     }
 
     private static void printHubDetails (int indent, Device dev)
@@ -365,6 +435,7 @@ final public class ShowTree
 	try {
 	    Hub		h = new Hub (dev);
 	    int		ports = h.getNumPorts ();
+	    boolean	indicator = h.isIndicator ();
 
 	    indentLine (indent,
 		(h.isRootHub () ? "Root " : "")
@@ -380,8 +451,10 @@ final public class ShowTree
 		"power switching: "
 		+ h.getPowerSwitchingMode ()
 		);
+	    if (indicator)
+		indentLine (indent, "has port indicator LEDs");
 	    if (h.isCompound ())
-		indentLine (indent, "Part of a compound device");
+		indentLine (indent, "part of a compound device");
 
 	    // not showing POTPGT, or hub's own current draw
 
@@ -439,21 +512,22 @@ final public class ShowTree
 
 	    //
 	    // PTP protocol -- based on an ISO draft, intended to
-	    // be neutral with respect to vendor and protocol.  New.
+	    // be neutral with respect to vendor and protocol.
+	    // These two devices predate the 6/1/1 interface
+	    // class/subclass/protocl from usb-if, so they need
+	    // to be specially recognized.
 	    //
 	    // Doesn't have serial line legacy features.
 	    //
 	    case 0x0121:	// dc240 with PTP prototype firmware
 	    case 0x0160:	// dc4800
+		// FIXME:  if jPhoto is available it should
+		// be able to plug itself in ...
 		indentLine (indent, "http://jphoto.sourceforge.net/");
-
-		    // FIXME:  if jPhoto is available it should
-		    // be able to plug itself in ...
-
 		return;
 	    
 	    default:
-		indentLine (indent, "I don't know about this product.");
+		indentLine (indent, "I don't recognize this Kodak product.");
 		return;
 	}
 	indentLine (indent, "I can talk to a " + type + " ...");

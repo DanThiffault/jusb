@@ -40,7 +40,7 @@ import java.io.IOException;
  * <p> Most fields of this descriptor are specified in section 9.6.3 of
  * the USB 1.1 specification.
  *
- * @version $Id: Interface.java,v 1.10 2001/01/20 20:09:42 dbrownell Exp $
+ * @version $Id: Interface.java,v 1.12 2005/01/17 07:31:48 westerma Exp $
  */
 final public class Interface extends Descriptor
 {
@@ -67,6 +67,7 @@ final public class Interface extends Descriptor
 	config = conf;
 	if (getDescriptorType () != TYPE_INTERFACE)
 	    throw new IllegalArgumentException ();
+	endpoints = new Endpoint [getU8 (4)];  //added by Wayne Westerman
     }
 
     // access to interface-specific descriptor fields
@@ -78,8 +79,7 @@ final public class Interface extends Descriptor
     /**
      * Used to identify alternate setting for an interface.
      * Interfaces may have multiple alternates; only one of them
-     * is active at a time.
-     * @see #setAlternate()
+     * may be claimed at a time.
      */
     public int getAlternateSetting ()
 	{ return getU8 (3); }
@@ -179,7 +179,7 @@ final public class Interface extends Descriptor
      *
      * @see #getClaimer()
      *
-     * @returns true if a new claim was made, and this alternate
+     * @return true if a new claim was made, and this alternate
      *	setting was made.
      * @exception IOException if some other module claimed
      *	this interface instead; or if the alternate setting

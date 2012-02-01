@@ -274,6 +274,9 @@ public final class HostProxy
 	/** @serial port on the hub */
 	private int			hubPortNum;
 
+	/** @serial describes current port connection speed */
+	private String			speed;
+
 	/** @serial how many ports this has, if it's a hub */
 	private int			numPorts;
 
@@ -288,6 +291,7 @@ public final class HostProxy
 
 	    hubPortNum = dev.getHubPortNum ();
 	    numPorts = dev.getNumPorts ();
+	    speed = dev.getSpeed ();
 
 	    config = dev.getConfiguration ().clone (this);
 	    desc = dev.getDeviceDescriptor ().clone (this);
@@ -307,6 +311,9 @@ public final class HostProxy
 
 	public int getNumPorts ()
 	    { return numPorts; }
+
+	public String getSpeed ()
+	    { return speed; }
 
 
 	public Configuration getConfiguration (int n)

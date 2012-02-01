@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include <asm/types.h>
 
@@ -59,7 +60,7 @@
 
 
 /*
- * $Id: linux.cc,v 1.4 2001/01/20 20:08:12 dbrownell Exp $
+ * $Id: linux.cc,v 1.5 2001/05/16 01:32:46 dbrownell Exp $
  *
  * This file contains CNI implementations of native methods, with
  * overhead comparable to C++ (i.e. less than JNI).
@@ -74,7 +75,7 @@ static void JvFail (char *message)
 {
     fprintf (stderr, "JvFail: %s\n", message);
     fflush (stderr);
-    ::exit (1);
+    exit (1);
 }
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/

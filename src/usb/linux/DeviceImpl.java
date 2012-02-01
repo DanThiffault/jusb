@@ -36,7 +36,7 @@ import usb.util.LangCode;
  * Don't use the change-configuration functionality yet.)
  *
  * @author David Brownell
- * @version $Id: DeviceImpl.java,v 1.5 2001/01/02 21:06:43 dbrownell Exp $
+ * @version $Id: DeviceImpl.java,v 1.9 2005/01/17 07:19:42 westerma Exp $
  */
 final class DeviceImpl extends Device implements DeviceSPI
 {
@@ -76,16 +76,19 @@ final class DeviceImpl extends Device implements DeviceSPI
     private DeviceImpl		children [];
 
     private DeviceImpl		hub;
+    private String		speed;
     private int			hubPortNum;
 
 
     // XXX Need kernel support for some device lock to safeguard
     // devices against unexpected concurrent operations.  Control
     // messages can interfere with other work in some cases.  This
-    // is an acknowledged open usbdevfs issue.  We should be able to
+    // is an acknowledged open kernel issue.  We should be able to
     // workaround other user mode code with O_EXCL.  That'd also
     // prevent multiple jUSB or libusb processes from working at
-    // the same time as this, though ...
+    // the same time as this, though ... we need exclusion at the
+    // level of interfaces, not devices.  (Hope kernel 2.5 updates
+    // usbfs along those lines!)
 
 
     // package private
@@ -151,7 +154,7 @@ final class DeviceImpl extends Device implements DeviceSPI
     throws USBException
 	{ close (); }
 
-    /** 
+    /**
      * Immediately closes the device; further operations on this object will
      * fail.  This is normally done only when the device is being removed.
      */
@@ -188,9 +191,12 @@ final class DeviceImpl extends Device implements DeviceSPI
     public int getHubPortNum ()
 	{ return hubPortNum; }
 
+    public String getSpeed ()
+	{ return speed; }
+
     public int getNumPorts ()
 	{ return (children == null) ? 0 : children.length; }
-    
+
     public DeviceDescriptor getDeviceDescriptor ()
 	{ return descriptor; }
 
@@ -227,7 +233,7 @@ final class DeviceImpl extends Device implements DeviceSPI
 
     /*-------------------------------------------------------------------*/
 
-    
+
     /**
      * Returns the filesystem name for this file.
      */
@@ -242,7 +248,7 @@ final class DeviceImpl extends Device implements DeviceSPI
     {
 	if (languages.length == 1)
 	    return languages [0];
-	
+
 	Locale	dflt = Locale.getDefault ();
 	int	retval = languages [0];
 
@@ -326,7 +332,7 @@ final class DeviceImpl extends Device implements DeviceSPI
 		return null;
 /**/
 	}
-	
+
 	retval = ControlMessage.getString (this, (byte) id, language);
 
 	if (retval == null)	// negative caching
@@ -342,6 +348,7 @@ final class DeviceImpl extends Device implements DeviceSPI
 	synchronized (lock) {
 	    if (!checkedStrings)
 		languages = ControlMessage.getLanguages (this);
+        checkedStrings = true;    //if don't set this can get repetitive lookup failures?  -- Wayne Westerman
 	}
 
 	if (languages == null)
@@ -364,7 +371,7 @@ final class DeviceImpl extends Device implements DeviceSPI
 
 	if (index < 0 || index >= descriptor.getNumConfigurations ())
 	    throw new IllegalArgumentException ();
-	
+
 	synchronized (lock) {
 	    if (index == selectedConfig && currentConfig != null)
 		return currentConfig;
@@ -398,7 +405,7 @@ final class DeviceImpl extends Device implements DeviceSPI
 
 	if (index < 0 || index > descriptor.getNumConfigurations ())
 	    throw new IllegalArgumentException ();
-	
+
 	synchronized (lock) {
 	    if ((status = setConfiguration (fd, index)) < 0)
 		throw new USBException ("can't set configuration", -status);
@@ -434,7 +441,7 @@ final class DeviceImpl extends Device implements DeviceSPI
 		+ ", index 0x" + Integer.toHexString (0xffff & index)
 		+ ", len " + Integer.toString (0xffff & length)
 		);
-	
+
 	status = controlMsg (fd, type, request, value, index,
 		data, 0, (short) data.length);
 	if (status >= 0) {
@@ -452,6 +459,10 @@ final class DeviceImpl extends Device implements DeviceSPI
 	    short value, short index, byte buf [])
     throws IOException
     {
+        if (buf == null) { //added by Wayne Westerman 2002
+            //assume we're doing a No-Data-Control, and somebody has to make a 0-length buf
+            buf = new byte[0];
+        }
 	if (buf.length >= MAX_CONTROL_LENGTH
 		|| (type & ControlMessage.DIR_TO_HOST) != 0)
 	    throw new IllegalArgumentException ();
@@ -464,7 +475,7 @@ final class DeviceImpl extends Device implements DeviceSPI
 		+ ", index 0x" + Integer.toHexString (0xffff & index)
 		+ ", len " + Integer.toString (buf.length)
 		);
-	
+
 	int status = controlMsg (fd, type, request, value, index,
 		buf, 0, (short) buf.length);
 	if (status < 0)
@@ -477,7 +488,7 @@ final class DeviceImpl extends Device implements DeviceSPI
 	byte		buf [];
 	Configuration	config;
 	int		total;
-	
+
 	// start by reading just the configuration descriptor
 	buf = ControlMessage.getStandardDescriptor (this,
 			Descriptor.TYPE_CONFIGURATION,
@@ -558,6 +569,9 @@ final class DeviceImpl extends Device implements DeviceSPI
     public int readBulk (int ep, byte buf [], int off, int length)
     {
 	// devfs currently maxes out at 4KB bulk transfers
+	// FIXME no more; up to 128KB should work, though
+	// not on older kernels.  big buffers make a HUGE
+	// performance difference.
 	int result = 0;
 
 	while (length > 0) {
@@ -627,7 +641,7 @@ final class DeviceImpl extends Device implements DeviceSPI
 	return retval;
     }
 
-	
+
     private static native int writeIntr (int fd, int ep,
 	    byte buf [], int off, int length);
 
@@ -724,13 +738,35 @@ final class DeviceImpl extends Device implements DeviceSPI
 		if (devnum != 0) {
 		    children [i] = (DeviceImpl) usb.getDevice (devnum);
 		    if (children [i] != null && children [i].hub == null) {
+			byte	buf [];
+
 			children [i].hub = this;
 			children [i].hubPortNum = i + 1;
+
+			try {
+			    // get port status, to see speed it's using
+			    buf = ControlMessage.getStatus (this,
+				    ControlMessage.TYPE_CLASS
+					| ControlMessage.RECIPIENT_OTHER,
+				    0, i + 1, 4);
+			    if (ControlMessage.getBit (Hub.PORT_HIGH_SPEED,
+				    buf, 0))
+				children [i].speed = "high";
+			    else if (ControlMessage.getBit (Hub.PORT_LOW_SPEED,
+				    buf, 0))
+				children [i].speed = "low";
+			    else
+				children [i].speed = "full";
+			} catch (IOException e) {
+			    // default:  children [i].speed = null;
+			}
+
 			if (Linux.trace)
 			    System.err.println ("usb-" + usb.getBusId ()
-				    + " hub dev" + getAddress ()
-				    + " port " + children [i].hubPortNum
-				    + " = dev" + children [i].getAddress ());
+				+ " hub addr=" + getAddress ()
+				+ " port=" + children [i].hubPortNum
+				+ " speed=" + children [i].speed
+				+ "; dev addr=" + children [i].getAddress ());
 		    }
 
 		    if (Linux.debug && children [i] != null

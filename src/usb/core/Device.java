@@ -55,7 +55,7 @@ import java.io.Serializable;
  * @see #getChild
  *
  * @author David Brownell
- * @version $Id: Device.java,v 1.25 2000/11/18 22:58:40 dbrownell Exp $
+ * @version $Id: Device.java,v 1.26 2002/04/19 21:53:07 dbrownell Exp $
  */
 abstract public class Device implements java.io.Serializable
 {
@@ -125,6 +125,8 @@ abstract public class Device implements java.io.Serializable
      * @see #getPortIdentifier
      * @see Bus#getDevice
      */
+// FIXME:  this  method should just go away
+// "avoid using these" is easier if it's not there...
     public final int getAddress () { return address; }
 
     /**
@@ -137,6 +139,14 @@ abstract public class Device implements java.io.Serializable
      * Returns the number of the hub port to which this device is connected.
      */
     abstract public int getHubPortNum ();
+
+    /**
+     * Returns the speed of the connection the device is using. 
+     * The return value is either "high", "full", or  "low"; or else null.
+     * Null is used for root hubs, or indicates some error prevented
+     * determining the speed being used for the device's hub port.
+     */
+    abstract public String getSpeed ();
 
     /**
      * Returns the number of ports in this hub; or zero.

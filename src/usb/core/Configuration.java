@@ -40,7 +40,7 @@ import java.io.IOException;
  * <p> Most fields of this descriptor are specified in section 9.6.2 of
  * the USB 1.1 specification.
  *
- * @version $Id: Configuration.java,v 1.7 2001/01/03 19:13:33 dbrownell Exp $
+ * @version $Id: Configuration.java,v 1.10 2005/01/17 07:27:16 westerma Exp $
  */
 final public class Configuration extends Descriptor
 {
@@ -54,7 +54,6 @@ final public class Configuration extends Descriptor
 
     // current alternate for each of the selected interfaces
     private transient Interface	interfaces [];
-    private transient int	altSettings [];
 
     public Configuration clone (Device d)
     {
@@ -68,7 +67,6 @@ final public class Configuration extends Descriptor
 	    throw new IllegalArgumentException ();
 	dev = device;
 	interfaces = new Interface [getU8 (4)];
-	altSettings = new int [interfaces.length];
     }
 
     /**
@@ -145,6 +143,16 @@ final public class Configuration extends Descriptor
 	return dev;
     }
 
+    // package private implemented by Wayne Westerman
+    boolean isMatchingInterface (int descriptor_offset, int desired_index, int desired_alt)
+    {
+        if (descriptorType (descriptor_offset) == TYPE_INTERFACE
+            && (0xff & data[descriptor_offset + 2]) == desired_index
+            && (0xff & data[descriptor_offset + 3]) == desired_alt)
+            return true;
+        else return false;
+    }
+
     /**
      * Returns the specified interface from this configuration, or
      * null if the device won't provide it.  Some devices won't return
@@ -156,50 +164,62 @@ final public class Configuration extends Descriptor
     throws IOException
     {
 	synchronized (this) {
-	    if (interfaces == null) {
+	    if (interfaces == null)
 		interfaces = new Interface [getNumInterfaces ()];
-		altSettings = new int [interfaces.length];
+
+	    // maybe we cached the one we're after
+	    for (int i = 0; i < interfaces.length; i++) {
+		if (interfaces [i] == null
+			    || interfaces [i].getNumber() != index)
+			continue;
+		if (interfaces [i].getAlternateSetting() == alt)
+		    return interfaces [i];
+		break;
 	    }
 
-	    if (interfaces [index] == null || alt != altSettings [index]) {
-		int		offset = getOffset ();
-		Interface	temp = null;
 
-		do {
+	    int		offset = getOffset ();
+	    Interface	temp = null;
 
-		    // Look at each interface descriptor
-		    offset = nextDescriptorOffset (offset);
-		    if (offset < 0)
-		    	break;
-		    if (descriptorType (offset) != TYPE_INTERFACE)
-			continue;
-		    if (temp == null)
-			temp = new Interface (this, offset);
-		    else
-			temp.offset = offset;
+	    do {
 
-		    // see if it's interesting
-		    int		number = temp.getNumber ();
-		    int		altSetting = temp.getAlternateSetting ();
+		// Look at each interface descriptor
+		offset = nextDescriptorOffset (offset);
+		if (offset < 0)
+		    break;
 
-		    if (interfaces [number] == null
-			    && altSetting == altSettings [number]) {
-			interfaces [number] = temp;
-			if (number != index || alt != altSetting) {
-			    temp = null;
-			    continue;
-			}
+        //Wayne checks interface type, compares index, and alt before allocating new Interface!
+        if (!isMatchingInterface(offset,index,alt))
+            continue;
+        temp = new Interface (this, offset);
+/*		brownell's commented out implementation below is buggy...don't want to make new Interface if not matching!
+
+        if (descriptorType (offset) != TYPE_INTERFACE)
+		    continue;
+		if (temp == null)
+		    temp = new Interface (this, offset);
+		else
+		    temp.offset = offset;
+
+		// see if it's what we're after
+		if (temp.getNumber () != index
+			|| temp.getAlternateSetting () != alt)
+		    continue;*/
+
+		// maybe cache it
+		for (int i = 0; i < interfaces.length; i++) {
+		    if (interfaces [i] == null) {
+			interfaces [i] = temp;
+			break;
 		    }
+		}
 
-		    // this is the one!!
-		    if (number == index && alt == altSetting)
-			return temp;
-		    
-		} while (offset > 0);
-		return null;
+		return temp;
 
-	    } else
-		return interfaces [index];
+	    } while (offset > 0);
+
+	    // what interface?
+	    return null;
 	}
     }
 }

@@ -4,7 +4,7 @@ implementation.  It's licensed under the LGPL.  The website is:
 	http://jusb.sourceforge.net/ 
 
 At this writing, only Linux provides "native USB" access, and other
-platforms must use RMI (experimental).
+platforms must use RMI (experimental, needs JDK 1.2 or later).
 
 
 JAVA REQUIREMENTS
@@ -15,8 +15,10 @@ the "usb.core" APIs.  That includes of course some J2ME profiles; several
 non-Sun implementations of Java should also be usable.
 
 Builds have recently been done with Kaffe 1.0.6 (partial build), JDKs 1.3
-and older, and the GCJ 2.96 snapshot in RedHat 7.  All of those have worked
-as runtime environments.  Your mileage may vary.
+and older, and the GCJ 2.96rh in RedHat 7.  All of those have worked
+as runtime environments.  Your mileage may vary.  Please report any
+build or execution bugs that show up because you're not using JDK 1.3;
+they should get fixed.
 
 
 HOST OPERATING SYSTEM ISSUES
@@ -59,7 +61,9 @@ There's also basic GCJ support in the Makefile.  At this writing
 it uses GCJ only to create header files (so jUSB may be called
 from compatible C/C++ programs) and compile to native code, not
 to create classfiles.  Don't bother with versions older than the
-GCJ 2.96 release.
+GCJ 2.96rh release.  (Shipped with RedHat 7.0; the RPMs can also
+be used with recent SuSE Linux distributions.  Evidently Debian
+Linux also includes GCJ support.)
 
 
 SANITY CHECKING
@@ -148,4 +152,4 @@ unless you manually update your local registry to point there.
 Main site:	http://jusb.sourceforge.net/
 =======================================================================
 
-$Id: README,v 1.12 2001/01/01 21:09:06 dbrownell Exp $
+$Id: README,v 1.13 2001/04/12 16:26:15 dbrownell Exp $

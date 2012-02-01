@@ -1,6 +1,7 @@
-# $Id: Makefile,v 1.23 2001/01/20 20:11:46 dbrownell Exp $
+# $Id: Makefile,v 1.29 2005/01/17 07:12:10 westerma Exp $
 #
-# Copyright (c) 2000 by David Brownell.  All Rights Reserved.
+# Copyright (c) 2000-2002 by David Brownell.  All Rights Reserved.
+#       Mac OSX and Win32 build capabilities added by Wayne Westerman Copyright (c) 2002-2004.
 #
 # This program is free software; you may use, copy, modify, and
 # redistribute it under the terms of the LICENSE with which it was
@@ -12,24 +13,28 @@
 # LICENSE for more details.
 #
 
-# Win32 builds presume cygwin (http://sources.redhat.com/cygwin)
+OSTYPE =	$(shell uname -s)
+#OSTYPE =	Win32
+
+# Win32 builds presume cygwin (http://www.cygwin.com/)
 # invokes a Win32 JVM, with JAVA_HOME set to a Win32 path
 # (like "d:/programs/jdk1.3"); no win32 native code yet
-ifeq ($(OSTYPE),cygwin)
+ifeq ($(OSTYPE),CYGWIN_NT-5.1)
     SEP=;
-
+    OSTYPE=Win32
 # ... else assume a UNIX build environment
 else
     SEP=:
 endif
 
 
-DOCTITLE="Java USB (for Linux)"
+DOCTITLE="Java USB"
 
 # for releases (override in env)
 VERSION ?= DEV
 
 CPATH :=	classes
+JAVAC := javac
 
 
 # "$(NAME).jar", "lib$(NAME).so", ...
@@ -64,6 +69,7 @@ REMOTE_SOURCES := \
  	usb/remote/USBListenerProxy.java
 
 UTIL_SOURCES := \
+	usb/util/EZ.java \
 	usb/util/LangCode.java \
 	usb/util/ShowTree.java \
 	usb/util/USBSocket.java
@@ -72,6 +78,7 @@ DEVICES_SOURCES := \
 	usb/devices/Kodak.java \
 	usb/devices/Rio500.java
 
+# Linux implementation, goes over usbfs
 LINUX_SOURCES := \
 	usb/linux/DeviceImpl.java \
 	usb/linux/HID.java \
@@ -82,8 +89,25 @@ LINUX_SOURCES := \
 LINUX_NATIVE_SOURCES = \
 	native/linux.c
 
-# WIN32_SOURCES := 
-	
+# Win32 implementation, talks to driver that
+# wraps other drivers
+WIN32_SOURCES := \
+	usb/windows/DeviceImpl.java \
+	usb/windows/USB.java \
+	usb/windows/USBException.java \
+	usb/windows/Windows.java
+
+WIN32_NATIVE_SOURCES :=
+
+MACOSX_SOURCES := \
+	usb/macosx/DeviceImpl.java \
+	usb/macosx/MacOSX.java \
+	usb/macosx/USB.java \
+	usb/macosx/USBException.java
+
+MACOSX_NATIVE_SOURCES = \
+	native/macosx.c
+
 VIEW_SOURCES := \
 	usb/view/Foo.java \
 	usb/view/HubNode.java \
@@ -98,10 +122,14 @@ JAVA_SOURCES = \
 	$(UTIL_SOURCES) \
 	$(DEVICES_SOURCES) \
 	$(LINUX_SOURCES) \
+	$(WIN32_SOURCES) \
+	$(MACOSX_SOURCES) \
 	$(VIEW_SOURCES)
 
 NATIVE_SOURCES = \
 	$(LINUX_NATIVE_SOURCES) \
+	$(MACOSX_NATIVE_SOURCES) \
+	$(WIN32_NATIVE_SOURCES) \
 	native/linux.cc
 
 
@@ -122,11 +150,11 @@ ifeq ($(findstring 1.1, $(JDK)),1.1)
     ifeq ($(findstring Kaffe, $(JDK)),Kaffe)
 	# hope it's Kaffe 1.0.6; 1.0.5 had problems!
 	CPATH := $(CPATH)$(SEP)$(JAVA_HOME)/share/kaffe/Klasses.jar
-	JNI_INC += -I$(JAVA_HOME)/include/kaffe 
+	JNI_INC += -I$(JAVA_HOME)/include/kaffe
 	JAVAH =	kaffeh
     else
 	CPATH := $(CPATH)$(SEP)$(JAVA_HOME)/lib/classes.zip
-	JNI_INC += -I$(JAVA_HOME)/include/linux 
+	JNI_INC += -I$(JAVA_HOME)/include/linux
 	JAVAH =	javah
     endif
     ifneq ($(origin SWING_HOME),undefined)
@@ -136,7 +164,7 @@ ifeq ($(findstring 1.1, $(JDK)),1.1)
     endif
 else
     JAVAH = javah
-    JNI_INC += -I$(JAVA_HOME)/include/linux 
+    JNI_INC += -I$(JAVA_HOME)/include/linux
 endif
 
 #
@@ -144,7 +172,7 @@ endif
 # start with basics (embedded configs can get smaller)
 # add implementations and other modules
 #
-SOURCES = $(CORE_SOURCES) $(UTIL_SOURCES)
+SOURCES = $(CORE_SOURCES) $(UTIL_SOURCES) $(DEVICES_SOURCES)
 OBJECTS = objects
 NATIVE =
 
@@ -172,13 +200,8 @@ endif
 
 endif
 
-# older versions seem to say "Linux"; newer ones, "linux-gnu"
-ifeq ($(OSTYPE),Linux)
-    OSTYPE = linux-gnu
-endif
-
 # only Linux native code just now ...
-ifeq ($(OSTYPE),linux-gnu)
+ifeq ($(OSTYPE),Linux)
 # ... which doesn't compile on Kaffe (JNIEXPORT #undef?)
 ifneq ($(findstring Kaffe, $(JDK)),Kaffe)
     SOURCES += $(LINUX_SOURCES)
@@ -188,15 +211,43 @@ ifneq ($(findstring Kaffe, $(JDK)),Kaffe)
 	usb_linux_USBException.h
     NATIVE += lib$(NAME).so
 endif
-endif
+else
+ifeq ($(OSTYPE),Darwin)
+    CC = cc
+    JNI_INC = -I/System/Library/Frameworks/JavaVM.framework/Versions/Current/Headers
 
+#    SOURCES += $(WIN32_SOURCES)
+    SOURCES += $(MACOSX_SOURCES)
+#    SOURCES += $(LINUX_SOURCES)
+    NATIVE_SRC = macosx.c
+    NATIVE_HEADERS = \
+	usb_macosx_DeviceImpl.h \
+	usb_macosx_MacOSX.h
+    NATIVE += libjusbMacOSX.jnilib
+else
+ifeq ($(OSTYPE),Win32)
+# FingerWorks jusb.jar reference platform--compile the Java and headers for all platforms
+    SOURCES += $(WIN32_SOURCES)
+    SOURCES += $(MACOSX_SOURCES)
+    SOURCES += $(LINUX_SOURCES)
+    # NATIVE_SRC = windows.c
+    NATIVE_HEADERS = \
+	usb_macosx_DeviceImpl.h \
+	usb_macosx_MacOSX.h \
+	usb_windows_DeviceImpl.h \
+	usb_windows_Windows.h
+#    NATIVE += jusbFWin.dll
+    NATIVE += $(NATIVE_HEADERS:%=native/%)
+endif
+endif
+endif
 
 #
 # Swing is widely available but not open;
 # so support for it can't be in the core
 #
 ifneq ($(origin USE_SWING),file)
-   SOURCES += $(VIEW_SOURCES)
+    SOURCES += $(VIEW_SOURCES)
 endif
 
 
@@ -209,7 +260,7 @@ default: $(NAME).jar $(NATIVE)
 # Make source distributions easier to use
 #
 install: $(NAME).jar $(NATIVE)
-ifeq ($(OSTYPE),linux-gnu)
+ifeq ($(OSTYPE),Linux)
 	sh bin/install
 	@echo "Documentation NOT installed."
 else
@@ -253,10 +304,10 @@ else
 endif
 
 viewer:
-	sh bin/viewer
+	bash bin/viewer
 
 usbd:
-	sh bin/usbd start
+	bash bin/usbd start
 
 #
 # Compiling the Java code ...
@@ -264,8 +315,8 @@ usbd:
 $(NAME).jar:	$(OBJECTS)
 	cd classes; jar cf ../$(NAME).jar *
 
-objects:	classes $(SOURCES:%=src/%)
-	javac -classpath "src$(SEP)$(CPATH)" -d classes \
+objects:	src classes $(SOURCES:%=src/%)
+	$(JAVAC) -classpath "src$(SEP)$(CPATH)" -d classes \
 		$(SOURCES:%=src/%)
 
 src:
@@ -307,6 +358,10 @@ jni-native: $(NATIVE_HEADERS:%=native/%) $(NATIVE_SRC:%=native/%)
 	cd native; $(CC) -Wall -shared -o ../lib$(NAME).so \
 		$(CFLAGS) $(JNI_INC) $(NATIVE_SRC)
 
+libjusbMacOSX.jnilib: $(NATIVE_HEADERS:%=native/%) $(NATIVE_SRC:%=native/%)
+	cd native; $(CC) -bundle -framework JavaVM -framework IOKit -framework CoreFoundation -o ../$@ \
+		$(CFLAGS) $(JNI_INC) $(NATIVE_SRC)
+
 native/usb_linux_DeviceImpl.h: classes/usb/linux/DeviceImpl.class
 ifneq ($(findstring 1.1, $(JDK)),1.1)
 	javah -jni -d native -classpath classes usb.linux.DeviceImpl
@@ -320,6 +375,33 @@ ifneq ($(findstring 1.1, $(JDK)),1.1)
 else
 	CLASSPATH=$(CPATH) $(JAVAH) -jni -d native usb.linux.USBException
 endif
+
+native/usb_macosx_DeviceImpl.h: classes/usb/macosx/DeviceImpl.class
+	$(JAVAH) -jni -d native -classpath classes usb.macosx.DeviceImpl
+
+native/usb_macosx_MacOSX.h: classes/usb/macosx/MacOSX.class
+	$(JAVAH) -jni -d native -classpath classes usb.macosx.MacOSX
+
+jusbFWin.dll: win32-native
+
+win32-native: $(NATIVE_HEADERS:%=native/%) $(NATIVE_SRC:%=native/%)
+	@echo "don't know how to compile native code yet"
+	@exit 1
+
+native/usb_windows_DeviceImpl.h: classes/usb/windows/DeviceImpl.class
+ifneq ($(findstring 1.1, $(JDK)),1.1)
+	javah -jni -d native -classpath classes usb.windows.DeviceImpl
+else
+	CLASSPATH=$(CPATH) $(JAVAH) -jni -d native usb.windows.DeviceImpl
+endif
+
+native/usb_windows_Windows.h: classes/usb/windows/Windows.class
+ifneq ($(findstring 1.1, $(JDK)),1.1)
+	$(JAVAH) -jni -d native -classpath classes usb.windows.Windows
+else
+	CLASSPATH=$(CPATH) $(JAVAH) -jni -d native usb.windows.Windows
+endif
+
 
 #
 # GCJ native compiles ... experimental
@@ -387,7 +469,9 @@ ifneq ($(findstring 1.1, $(JDK)),1.1)
 		source code on `date "+%e-%b-%Y"`.\
 		" \
 	    -classpath "$(CPATH)$(SEP)src" \
-	    usb.core usb.linux usb.remote usb.util usb.view usb.devices
+	    usb.core \
+	    usb.linux usb.remote usb.windows usb.macosx \
+	    usb.util usb.view usb.devices
 else
 	@echo "Requires JDK 1.2 (or later) javadoc."
 	@exit 1
@@ -401,7 +485,8 @@ apidoc:
 clean:
 	if [ -d src ]; then rm -rf src.tgz apidoc; fi
 	rm -rf classes include-cni idl \
-		native/usb_linux_*.h obj-static showtree \
+		native/usb_*_*.h obj-static showtree \
+        native/*.o \
 		jusb-$(VERSION)-src.tgz *.jar lib$(NAME)* \
 		Log *~ *.s core
 	find . '(' -name '*~' -o -name '.#*' ')' -exec rm -f '{}' ';'
