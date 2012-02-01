@@ -216,9 +216,9 @@ ifeq ($(OSTYPE),Darwin)
     CC = cc
     JNI_INC = -I/System/Library/Frameworks/JavaVM.framework/Versions/Current/Headers
 
-#    SOURCES += $(WIN32_SOURCES)
+    SOURCES += $(WIN32_SOURCES)
     SOURCES += $(MACOSX_SOURCES)
-#    SOURCES += $(LINUX_SOURCES)
+    SOURCES += $(LINUX_SOURCES)
     NATIVE_SRC = macosx.c
     NATIVE_HEADERS = \
 	usb_macosx_DeviceImpl.h \
