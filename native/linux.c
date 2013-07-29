@@ -226,11 +226,11 @@ Java_usb_linux_DeviceImpl_controlMsg (
     } else
 	buffer = NULL;
 
-    ctrl.requesttype = requestType;
-    ctrl.request = request;
-    ctrl.value = value;
-    ctrl.index = index;
-    ctrl.length = len & 0xffff;
+    ctrl.bRequestType = requestType;
+    ctrl.bRequest = request;
+    ctrl.wValue = value;
+    ctrl.wIndex = index;
+    ctrl.wLength = len & 0xffff;
     ctrl.timeout = TIMEOUT;	// USB should t/o after 5 seconds.
     ctrl.data = buffer + off;
     if ((retval = ioctl (fd, USBDEVFS_CONTROL, &ctrl)) < 0)

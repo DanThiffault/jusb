@@ -347,7 +347,7 @@ classes:
 KERNEL_INC ?=	/home/src/linux/include
 INCLUDES =	-I$(KERNEL_INC)
 
-CFLAGS =	-g -O $(INCLUDES) $(RPM_OPT_FLAGS)
+CFLAGS =	-g -fPIC -O $(INCLUDES) $(RPM_OPT_FLAGS)
 
 
 native: $(NATIVE)
