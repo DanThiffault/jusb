@@ -515,8 +515,10 @@ void DeviceAdded(void *refCon, io_iterator_t iterator) {
             continue;
         }
         kr = (*privateDataRef->device)->GetDeviceClass(privateDataRef->device, &deviceClass);
-        if ( KERN_SUCCESS != kr || deviceClass == 0x09) {
+        if ( KERN_SUCCESS != kr || deviceClass == 0x09 || deviceClass == 0xff) {
             //we don't want jusb talking to Hubs (deviceClass 0x09) 'cause that crashes the bus?
+            //we don't want jusb talking to (deviceClass 0xff) as this throws a control read error in IOkit on OSX
+            //usb.macosx.USBException: control read error --  [0x1ffffd13]  [0x1ffffd13]
             releasePrivateData(privateDataRef);
             continue;
         }
